@@ -20,9 +20,8 @@ Route::get('/', function () {
 
 Route::prefix('todo')->group(function () {
     Route::controller(TodoController::class)->group(function() {
-        
         Route::get('/', 'index')->name('todo.index');
-
+        Route::get('/show', 'show')->name('todo.show');
 
     });
 });
