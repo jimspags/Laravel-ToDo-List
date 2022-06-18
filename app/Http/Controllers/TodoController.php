@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Todo;
+use Illuminate\Support\Facades\Validator;
 
 class TodoController extends Controller
 {
@@ -24,6 +25,28 @@ class TodoController extends Controller
             return response()->json([
                 'status' => 400,
                 'message' => "No Todo List"
+            ]);
+        }
+    }
+
+    public function store(Request $request) {
+        //Validate data
+        $validator = Validator::make($request->all(), [
+            'todo' => ['required','min:3'],
+            'description' => ['required', 'min:6']
+        ]);
+        
+        if($validator->fails()) {
+            return response()->json([
+                'status' => 400,
+                'errors' => $validator->errors()
+            ]);
+        } else {
+            $todoId = Todo::create($request->all());
+            return response()->json([
+                'status' => 200,
+                'todo' => $request->all(),
+                'todoId' => $todoId->id
             ]);
         }
     }
