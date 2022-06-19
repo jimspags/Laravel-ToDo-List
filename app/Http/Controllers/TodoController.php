@@ -58,4 +58,33 @@ class TodoController extends Controller
         ]);
     }
 
+    public function edit(Todo $todo) {  
+        return response()->json([
+            'todo' => $todo
+        ]);
+    }
+
+    public function update(Todo $todo, Request $request) {
+        $validator = Validator::make($request->all(), [
+            'todo' => 'required',
+            'description' => 'required'
+        ]);
+
+        if($validator->fails()) {
+            return response()->json([
+                "status" => 400,
+                "errors" => $validator->errors()
+            ]);
+            
+        } else {
+            $todo->update($request->all());
+            return response()->json([
+                "status" => 200,
+                "todo" => $todo
+            ]);
+        }
+
+
+    }
+
 }

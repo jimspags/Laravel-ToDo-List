@@ -38,29 +38,31 @@
 
 
 <!-- EDIT -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Update Todo</h5>
+        <h5 class="modal-title" id="editModalLabel">Update Todo</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form id="todo_form_edit">
             <div class="form-goup">
                 <label for="">Todo</label>
-                <input type="text" name="todoEdit" id="" class="form-control" placeholder="Todo"><br>
-                <span id="todoError"></span><br>
+                <input type="text" name="todoEdit" id="todoEdit" class="form-control" placeholder="Todo"><br>
+                <span id="todoEditError"></span><br>
                 <label for="">Description</label><br>
-                <textarea name="descriptionEdit" id="" cols="30" rows="5"></textarea><br>
-                <span id="descriptionError"></span><br>
+                <textarea name="descriptionEdit" id="descriptionEdit" cols="30" rows="5"></textarea><br>
+                <span id="descriptionEditError"></span><br>
+                <input type="hidden" name="idEdit" id="idEdit" value="">
+            </div>
+            <div class="modal-footer">
+                <input type="submit" value="Update" class="btn btn-primary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Update</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
+
     </div>
   </div>
 </div>
@@ -76,9 +78,7 @@
                 type: "GET",
                 url: "{{ route('todo.show') }}",
                 dataType: "json",
-                success: function(response) {
-                    console.log(response.status == 400 ? "Data fetched" : "")
-                    
+                success: function(response) {                    
                     //display data
                     if(response.status == 200) {
                         $.each(response.todos, function(key, todo) {
@@ -87,7 +87,7 @@
                                 <td>"+ todo.id +"</td>\
                                 <td>"+ todo.todo +"</td>\
                                 <td>"+ todo.description +"</td>\
-                                <td><button type='button' class='btn btn-primary' data-bs-toggle='modal' data-bs-target='#exampleModal'>UPDATE</button><button class='btn btn-danger' id='deleteButton' value='"+ todo.id +"'>DELETE</button></td>\
+                                <td><button type='button' class='btn btn-primary' id='editButton' data-bs-toggle='modal' data-bs-target='#editModal' value='"+ todo.id +"'>UPDATE</button><button class='btn btn-danger' id='deleteButton' value='"+ todo.id +"'>DELETE</button></td>\
                             </tr>\
                             ");
                         });
@@ -140,7 +140,7 @@
                         <td>"+ response.todoId +"</td>\
                         <td>"+ response.todo.todo +"</td>\
                         <td>"+ response.todo.description +"</td>\
-                        <td><button class='btn btn-primary'>UPDATE</button><button class='btn btn-danger' id='deleteButton' value='"+ response.todoId +"'>DELETE</button></td>\
+                        <td><button class='btn btn-primary' id='editButton' data-bs-toggle='modal' data-bs-target='#editModal' value='"+ response.todoId +"'>UPDATE</button><button class='btn btn-danger' id='deleteButton' value='"+ response.todoId +"'>DELETE</button></td>\
                         </tr>");
                     }
 
@@ -170,21 +170,84 @@
 
             //Passing the ID to URL
             var url = "{{ route('todo.delete', ':id')}}"
-            var id = $('#deleteButton').val();
+            var id = $(this).val();
             url = url.replace(":id", id);
 
             $.ajax({
                 type: "DELETE",
                 url: url,
                 success: function(response) {
-                    console.log(response.message)
                     $("#todo_list").html("");
                     fetchTodo();
                 }
             });
         });
 
+        //Edit Todo and pass data to modal
+        $(document).on('click', '#editButton', function() {
 
+            //Passing the ID to URL
+            var url = "{{ route('todo.edit', ':id')}}";
+            var id = $(this).val();
+            url = url.replace(":id", id);
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "json",
+                success: function(response){
+                    $("#todoEdit").val(response.todo.todo);
+                    $("#descriptionEdit").val(response.todo.description);
+                    $("#idEdit").val(response.todo.id);
+                }
+            });
+        });
+
+
+        //Update
+        $("#todo_form_edit").submit(function(e) {
+            e.preventDefault();
+            $.ajaxSetup({
+                headers: {
+                    "X-CSRF-TOKEN": $("meta[name='csrf_token']").attr('content')
+                }
+            });
+
+            var url = "{{ route('todo.update', ':id')}}";
+            var id =  $("input[name='idEdit']").val();
+            url = url.replace(":id", id);
+
+            var data = {
+                todo: $("input[name='todoEdit']").val(),
+                description: $("textarea[name='descriptionEdit']").val()
+            }
+
+            $.ajax({
+                type: "PUT",
+                url: url,
+                data: data,
+                dataType: "json",
+                success: function(response) {
+                    //Clear error message
+                    $("#todoEditError").text("");
+                    $("#descriptionEditError").text("");
+                    if(response.status == 400) {
+                        $("#todoEditError").text(response.errors.todo);
+                        $("#descriptionEditError").text(response.errors.description);
+                    }
+
+                    if(response.status == 200) {
+                        $("#editModal").modal("hide");
+                        $("#todo_list").html("");
+                        fetchTodo();
+                    }
+
+                }
+            });
+
+
+
+        });
 
     });
 </script>
