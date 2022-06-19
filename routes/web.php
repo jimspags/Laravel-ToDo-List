@@ -24,6 +24,7 @@ Route::prefix('todo')->group(function () {
         Route::get('/', 'index')->name('todo.index');
         Route::get('/show', 'show')->name('todo.show');
         Route::post('/store', 'store')->name('todo.store');
+        Route::delete('/delete/{todo}', 'destroy')->name('todo.delete');
 
     });
 });

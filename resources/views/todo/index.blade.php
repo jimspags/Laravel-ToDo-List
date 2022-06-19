@@ -39,6 +39,7 @@
 
 <script>
     $(document).ready(function() {
+
         //Call function to get and display to table
         fetchTodo();
         
@@ -59,7 +60,7 @@
                                 <td>"+ todo.id +"</td>\
                                 <td>"+ todo.todo +"</td>\
                                 <td>"+ todo.description +"</td>\
-                                <td>UPDATE DELETE</td>\
+                                <td><button class='btn btn-primary'>UPDATE</button><button class='btn btn-danger' id='deleteButton' value='"+ todo.id +"'>DELETE</button></td>\
                             </tr>\
                             ");
                         });
@@ -78,7 +79,7 @@
         }
 
 
-        //Add Todo
+        //Add Function
         $("#todo_form").submit(function(e) {
             //Set up csrf token
             $.ajaxSetup({
@@ -99,15 +100,19 @@
                 data: data,
                 dataType: "json",
                 success: function(response) {
+                    //Clear input Field
+                    $("input[name='todo']").val(""),
+                    $("textarea[name='description']").val("")
 
                     //Append newly added todo
                     if(response.status == 200) {
+                        $("")
                         $("#todo_list").append("\
                         <tr>\
                         <td>"+ response.todoId +"</td>\
                         <td>"+ response.todo.todo +"</td>\
                         <td>"+ response.todo.description +"</td>\
-                        <td></td>\
+                        <td><button class='btn btn-primary'>UPDATE</button><button class='btn btn-danger' id='deleteButton' value='"+ response.todoId +"'>DELETE</button></td>\
                         </tr>");
                     }
 
@@ -124,11 +129,31 @@
                 }
 
             });
-            
-
-            
+        });
 
 
+        //Delete function
+        $(document).on('click', '#deleteButton', function(e) {
+            $.ajaxSetup({
+                headers: {
+                    "X-CSRF-TOKEN": $("meta[name='csrf_token']").attr('content')
+                }
+            });
+
+            //Passing the ID to URL
+            var url = "{{ route('todo.delete', ':id')}}"
+            var id = $('#deleteButton').val();
+            url = url.replace(":id", id);
+
+            $.ajax({
+                type: "DELETE",
+                url: url,
+                success: function(response) {
+                    console.log(response.message)
+                    $("#todo_list").html("");
+                    fetchTodo();
+                }
+            });
         });
 
 
