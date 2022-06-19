@@ -15,7 +15,7 @@ use App\Http\Controllers\TodoController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('todo.index');
 });
 
 Route::prefix('todo')->group(function () {

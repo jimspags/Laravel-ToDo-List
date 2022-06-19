@@ -1,7 +1,7 @@
 @extends('layout')
 @section('title', 'Todo')
 @section('content')
-<div class="container-fluid">
+<div class="container">
     <div class="row-12"><h1 class="text-center">TODO LIST</h1></div>
     <div class="row">
         <div class="col-9">
@@ -20,7 +20,7 @@
             </table>
         </div>
 
-        <div class="col-3">
+        <div class="col-3 border">
             <form id="todo_form">
                 <div class="form-goup">
                     <label for="">Todo</label>
@@ -37,9 +37,36 @@
 </div>
 
 
+<!-- EDIT -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Update Todo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="todo_form_edit">
+            <div class="form-goup">
+                <label for="">Todo</label>
+                <input type="text" name="todoEdit" id="" class="form-control" placeholder="Todo"><br>
+                <span id="todoError"></span><br>
+                <label for="">Description</label><br>
+                <textarea name="descriptionEdit" id="" cols="30" rows="5"></textarea><br>
+                <span id="descriptionError"></span><br>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
     $(document).ready(function() {
-
         //Call function to get and display to table
         fetchTodo();
         
@@ -50,8 +77,8 @@
                 url: "{{ route('todo.show') }}",
                 dataType: "json",
                 success: function(response) {
-                    console.log(response.status)
-
+                    console.log(response.status == 400 ? "Data fetched" : "")
+                    
                     //display data
                     if(response.status == 200) {
                         $.each(response.todos, function(key, todo) {
@@ -60,7 +87,7 @@
                                 <td>"+ todo.id +"</td>\
                                 <td>"+ todo.todo +"</td>\
                                 <td>"+ todo.description +"</td>\
-                                <td><button class='btn btn-primary'>UPDATE</button><button class='btn btn-danger' id='deleteButton' value='"+ todo.id +"'>DELETE</button></td>\
+                                <td><button type='button' class='btn btn-primary' data-bs-toggle='modal' data-bs-target='#exampleModal'>UPDATE</button><button class='btn btn-danger' id='deleteButton' value='"+ todo.id +"'>DELETE</button></td>\
                             </tr>\
                             ");
                         });
@@ -70,7 +97,7 @@
                     if(response.status == 400) {
                         $("#todo_list").append("\
                             <tr>\
-                                <td class='text-center' colspan='4'>No Todo List</td>\
+                                <td class='text-center' colspan='4' id='noTodoList'>No Todo List</td>\
                             </tr>\
                         ");
                     }
@@ -104,9 +131,10 @@
                     $("input[name='todo']").val(""),
                     $("textarea[name='description']").val("")
 
+
                     //Append newly added todo
                     if(response.status == 200) {
-                        $("")
+                        $('#noTodoList').remove();
                         $("#todo_list").append("\
                         <tr>\
                         <td>"+ response.todoId +"</td>\
@@ -157,6 +185,9 @@
         });
 
 
+
     });
 </script>
+
+
 @endsection
